@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&family=Nanum+Myeongjo&family=Nanum+Gothic+Coding&family=Nanum+Gothic&display=swap" rel="stylesheet">
 <style>
-:root{--wb:normal;--pw:44em;--bg:#d8d8d0;--ink:#1d1d1b;--fs:19px;--lh:1.9;--ls:0px;--ps:.6em;--ind:0em;--font:'Gowun Batang',serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--wb:normal;--pw:44em;--z:1;--bg:#d8d8d0;--ink:#1d1d1b;--fs:19px;--lh:1.9;--ls:0px;--ps:.6em;--ind:0em;--font:'Gowun Batang',serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,'Nanum Gothic',sans-serif;display:flex;flex-direction:column}
 button,select,input{font:inherit;color:inherit}
@@ -40,7 +40,7 @@ summary{cursor:pointer;padding:4px 0}
 
 .sw{width:34px;height:34px;min-height:0;padding:0}
 label.chk{display:flex;gap:6px;align-items:center}
-#ed{flex:1;overflow-y:auto;box-sizing:border-box;width:100%;max-width:var(--pw);margin:0 auto;padding:24px 18px 55vh;outline:none;font-family:var(--font);font-size:var(--fs);line-height:var(--lh);letter-spacing:var(--ls);word-break:var(--wb);overflow-wrap:break-word;caret-color:var(--ink)}
+#ed{zoom:var(--z);flex:1;overflow-y:auto;box-sizing:border-box;width:100%;max-width:var(--pw);margin:0 auto;padding:24px 18px 55vh;outline:none;font-family:var(--font);font-size:var(--fs);line-height:var(--lh);letter-spacing:var(--ls);word-break:var(--wb);overflow-wrap:break-word;caret-color:var(--ink)}
 #ed div{margin:0 0 var(--ps);text-indent:var(--ind);min-height:1em}
 ::selection{background:var(--ink);color:var(--bg)}
 </style>
@@ -89,17 +89,17 @@ label.chk{display:flex;gap:6px;align-items:center}
 <input type="file" id="ff" accept=".ttf,.otf,.woff,.woff2" multiple hidden>
 <script>
 const $=s=>document.querySelector(s),ed=$('#ed'),root=document.documentElement.style;
-const DEF={fs:14,lh:1.9,ls:0,ps:.6,ind:0,pw:0,font:"'Gowun Batang',serif",bg:'#d8d8d0',ink:'#1d1d1b',tw:true,spc:true,kw:false,hist:[],favs:[]};
+const DEF={fs:14,lh:1.9,ls:0,ps:.6,ind:0,pw:0,zoom:1,font:"'Gowun Batang',serif",bg:'#d8d8d0',ink:'#1d1d1b',tw:true,spc:true,kw:false,hist:[],favs:[]};
 const PRE=[['#d8d8d0','#1d1d1b','전자잉크'],['#f1f0ea','#222','종이'],['#2a2a28','#cfcfc6','밤 잉크'],['#e6e1cf','#2b2a24','누런 잉크']];
 const FONTS=[["'Gowun Batang',serif",'고운바탕'],["'Nanum Myeongjo',serif",'나눔명조'],["'Nanum Gothic Coding',monospace",'나눔고딕코딩(타자기)'],["'Nanum Gothic',sans-serif",'나눔고딕']];
-const R=[['fs','글자 크기',8,32,.5,'pt'],['lh','줄간격',1,3,.05,''],['ls','글자간격',-1,6,.1,'px'],['ps','문단 간격',0,3,.1,'em'],['ind','들여쓰기',0,4,.5,'em'],['pw','본문 폭',0,21,.5,'cm']];
+const R=[['fs','글자 크기',8,32,.5,'pt'],['lh','줄간격',1,3,.05,''],['ls','글자간격',-1,6,.1,'px'],['ps','문단 간격',0,3,.1,'em'],['ind','들여쓰기',0,4,.5,'em'],['pw','본문 폭',0,21,.5,'cm'],['zoom','화면 배율',.5,3,.1,'배']];
 let lastF;
 let S={...DEF};
 try{const t=JSON.parse(localStorage.getItem('ink-s')||'null');if(t){if(!t.u&&t.fs)t.fs=Math.round(t.fs*1.5)/2;Object.assign(S,t)}else if(matchMedia('(prefers-color-scheme: dark)').matches){S.bg=PRE[2][0];S.ink=PRE[2][1]}}catch(e){}
 const saveS=()=>{S.u=1;try{localStorage.setItem('ink-s',JSON.stringify(S))}catch(e){}};
 function apply(sk){
   root.setProperty('--bg',S.bg);root.setProperty('--ink',S.ink);root.setProperty('--fs',S.fs+'pt');root.setProperty('--lh',S.lh);
-  root.setProperty('--ls',S.ls+'px');root.setProperty('--ps',S.ps+'em');root.setProperty('--ind',S.ind+'em');root.setProperty('--pw',S.pw?S.pw+'cm':'44em');root.setProperty('--font',S.font);
+  root.setProperty('--ls',S.ls+'px');root.setProperty('--ps',S.ps+'em');root.setProperty('--ind',S.ind+'em');root.setProperty('--pw',S.pw?S.pw+'cm':'44em');root.setProperty('--z',S.zoom||1);root.setProperty('--font',S.font);
   root.setProperty('--wb',S.kw?'keep-all':'normal');$('#kw').checked=S.kw;
   $('#tw').checked=S.tw;$('#spc').checked=S.spc;if(lastF!==S.font){lastF=S.font;renderFonts()}if(!sk)syncColor();
   R.forEach(([k])=>{const i=$('#sl_'+k);if(i){i.value=S[k];i.nextElementSibling.textContent=(k=='pw'&&!S.pw)?'자동':S[k]+R.find(r=>r[0]==k)[5]}});
