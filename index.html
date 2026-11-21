@@ -25,6 +25,13 @@ button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7
 #fl{display:flex;flex-direction:column;width:100%;max-height:170px;overflow-y:auto;border:1px solid var(--ink)}
 #fl button{border:0;border-bottom:1px solid var(--ink);text-align:left;font-size:17px;padding:8px 10px;min-height:40px}
 #fl button:last-child{border-bottom:0}
+#foot{display:flex;align-items:center;gap:8px}
+#foot button{min-height:28px;padding:2px 8px;font-size:12px;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#msg{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dn{flex:1;min-width:8em;border:1px solid var(--ink);background:transparent;padding:6px;border-radius:0}
+.dr{display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--ink);padding:6px 0}
+.dr span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr small{opacity:.7}
 #fl button.on{background:var(--ink);color:var(--bg)}
 #hex{width:7.5em;border:1px solid var(--ink);background:transparent;padding:6px;font-family:monospace;border-radius:0}
 .chip{position:relative;display:inline-block}
@@ -63,6 +70,11 @@ label.chk{display:flex;gap:6px;align-items:center}
     <button id="addf">🔤 글꼴 파일 추가</button>
   </div>
   <div id="sls"></div>
+  <details id="dr" open>
+    <summary>임시저장 (Ctrl+S)</summary>
+    <div class="row"><input id="dn" placeholder="저장 이름" maxlength="40" aria-label="저장 이름"><button id="ds">저장</button></div>
+    <div id="dl"></div>
+  </details>
   <details id="pal" open>
     <summary>팔레트 (접기/펼치기)</summary>
     <div class="row">
@@ -84,7 +96,7 @@ label.chk{display:flex;gap:6px;align-items:center}
   <div class="row"><button id="rst">기본값으로</button></div>
 </div>
 <div id="ed" contenteditable="true" spellcheck="false" autocapitalize="off" aria-label="원고" role="textbox" aria-multiline="true"></div>
-<div id="foot"><span id="msg"></span> <span id="cnt"></span></div>
+<div id="foot"><button id="qs">임시저장</button><span id="msg"></span> <span id="cnt"></span></div>
 <input type="file" id="fi" accept=".txt,.md,.docx,text/plain" hidden>
 <input type="file" id="ff" accept=".ttf,.otf,.woff,.woff2" multiple hidden>
 <script>
@@ -161,11 +173,11 @@ function center(){
   if(!b)return;const eb=ed.getBoundingClientRect(),diff=b.top-(eb.top+eb.height*.42);
   if(Math.abs(diff)>4)ed.scrollTop+=diff;
 }
-ed.addEventListener('input',()=>{persist();center()});
+ed.addEventListener('input',e=>{if(!e.isComposing&&e.inputType==='insertText'&&e.data==='.')dots();persist();center()});
 ed.addEventListener('paste',e=>{e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,t)});
 /* file in/out */
 $('#imp').onclick=()=>$('#fi').click();
-$('#fi').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(getText().trim()&&!confirm('현재 원고를 덮어쓸까요?'))return;if(/\.docx$/i.test(f.name)){importDocx(f).catch(()=>say('워드 파일을 읽지 못했어요'));return}const r=new FileReader();r.onload=()=>{setText(String(r.result).replace(/\r\n?/g,'\n'));persist()};r.readAsText(f)};
+$('#fi').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(getText().trim())saveDraft('불러오기 전 백업',true);if(/\.docx$/i.test(f.name)){importDocx(f).catch(()=>say('워드 파일을 읽지 못했어요'));return}const r=new FileReader();r.onload=()=>{setText(String(r.result).replace(/\r\n?/g,'\n'));persist()};r.readAsText(f)};
 $('#exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([getText()],{type:'text/plain'}));a.download='원고.txt';document.body.append(a);a.click();a.remove()};
 $('#cp').onclick=async()=>{const b=$('#cp');try{try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([richHTML()],{type:'text/html'}),'text/plain':new Blob([getText()],{type:'text/plain'})})])}catch(e2){await navigator.clipboard.writeText(getText())}}catch(e){const r=document.createRange();r.selectNodeContents(ed);getSelection().removeAllRanges();getSelection().addRange(r)}b.classList.add('on');setTimeout(()=>b.classList.remove('on'),900)};
 /* toolbar: keep editor focus so the phone keyboard stays up */
@@ -210,6 +222,28 @@ async function importDocx(f){
   if(o.font){const n=o.font,fb=/고딕|굴림|돋움|gothic|malgun|gulim|dotum|arial|sans/i.test(n)?"'Nanum Gothic',sans-serif":"'Gowun Batang','Nanum Myeongjo',serif";S.font=`'${n}',${fb}`;addOpt(S.font,'원본: '+n)}
   setText(tx.join('\n'));persist();apply();say(`워드 서식 적용: ${S.fs}pt · 줄간격 ${S.lh} · 폭 ${S.pw||'자동'}cm`);
 }
+/* ... -> … like Word */
+function dots(){const s=getSelection();if(!s.rangeCount||!s.isCollapsed)return;const n=s.anchorNode,o=s.anchorOffset;if(!n||n.nodeType!==3||o<3||n.data.slice(o-3,o)!=='...')return;const r=document.createRange();r.setStart(n,o-3);r.setEnd(n,o);s.removeAllRanges();s.addRange(r);document.execCommand('insertText',false,'…')}
+/* named drafts */
+const DK='ink-d',CK='ink-c';let cur='';try{cur=localStorage.getItem(CK)||''}catch(e){}
+const rd=()=>{try{return JSON.parse(localStorage.getItem(DK)||'{}')}catch(e){return{}}};
+const updQS=()=>{$('#qs').textContent=cur?'임시저장 · '+cur:'임시저장'};
+function openDraft(){$('#panel').hidden=false;$('#dr').open=true;$('#dn').focus()}
+function saveDraft(name,quiet){name=(name||'').trim();if(!name){openDraft();say('저장할 이름을 입력해 주세요');return}
+  const d=rd();d[name]={t:getText(),at:Date.now(),f:{fs:S.fs,lh:S.lh,ls:S.ls,ps:S.ps,ind:S.ind,pw:S.pw,font:S.font}};
+  try{localStorage.setItem(DK,JSON.stringify(d));if(!quiet){cur=name;localStorage.setItem(CK,cur)}}catch(e){say('저장 공간이 부족해요');return}
+  if(!quiet){say('저장됨: '+name);$('#dn').value=name}updQS();renderDrafts()}
+function loadDraft(n){const x=rd()[n];if(!x)return;if(getText().trim()&&cur!==n)saveDraft('불러오기 전 백업',true);setText(x.t);Object.assign(S,x.f||{});cur=n;try{localStorage.setItem(CK,n)}catch(e){}persist();apply();updQS();$('#dn').value=n;say('불러옴: '+n)}
+function renderDrafts(){const d=rd(),ks=Object.keys(d).sort((a,b)=>d[b].at-d[a].at),l=$('#dl');
+  l.replaceChildren(...ks.map(n=>{const r=document.createElement('div'),s=document.createElement('span'),b=document.createElement('b'),sm=document.createElement('small'),o=document.createElement('button'),x=document.createElement('button');r.className='dr';b.textContent=n;sm.textContent=new Date(d[n].at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · '+d[n].t.replace(/\n/g,'').length.toLocaleString()+'자';s.append(b,document.createElement('br'),sm);o.textContent='불러오기';o.onclick=()=>loadDraft(n);x.textContent='삭제';
+    x.onclick=()=>{if(x.dataset.s){const e=rd();delete e[n];try{localStorage.setItem(DK,JSON.stringify(e));if(cur===n){cur='';localStorage.removeItem(CK);updQS()}}catch(_){}renderDrafts()}else{x.dataset.s=1;x.textContent='정말?';setTimeout(()=>{x.dataset.s='';x.textContent='삭제'},2500)}};
+    r.append(s,o,x);return r}))}
+const quickSave=()=>{if(cur)saveDraft(cur);else{openDraft();say('이름을 정해 저장해 주세요')}};
+$('#ds').onclick=()=>saveDraft($('#dn').value);
+$('#dn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();saveDraft($('#dn').value)}};
+$('#qs').addEventListener('pointerdown',e=>e.preventDefault());$('#qs').onclick=quickSave;
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();quickSave()}});
+updQS();renderDrafts();$('#dn').value=cur;
 apply();renderChips();count();ed.focus();
 </script>
 </body>
