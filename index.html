@@ -14,13 +14,13 @@ button,select,input{font:inherit;color:inherit}
 button,select{background:transparent;border:1px solid var(--ink);border-radius:0;padding:6px 10px;cursor:pointer;min-height:36px}
 button:active{background:var(--ink);color:var(--bg)}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-#bar{display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid var(--ink)}
+#bar{flex:none;display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid var(--ink)}
 #bar .sp{flex:1}
 #bar button{min-width:38px;height:38px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center}
 #bar .q{font:700 22px/1 'Nanum Gothic Coding',monospace}
 button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:square;stroke-linejoin:miter}
 #bar button.on,.tgt.on{background:var(--ink);color:var(--bg)}
-#foot{padding:4px 14px;font-size:12px;opacity:.75;text-align:right;border-top:1px solid var(--ink)}
+#foot{flex:none;padding:4px 14px;font-size:12px;opacity:.75;text-align:right;border-top:1px solid var(--ink)}
 .lab{font-size:12px;opacity:.7;margin-top:10px}
 #fl{display:flex;flex-direction:column;width:100%;max-height:170px;overflow-y:auto;border:1px solid var(--ink)}
 #fl button{border:0;border-bottom:1px solid var(--ink);text-align:left;font-size:17px;padding:8px 10px;min-height:40px}
@@ -29,7 +29,7 @@ button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7
 #hex{width:7.5em;border:1px solid var(--ink);background:transparent;padding:6px;font-family:monospace;border-radius:0}
 .chip{position:relative;display:inline-block}
 .chip .x{position:absolute;top:-8px;right:-8px;width:20px;height:20px;min-height:0;padding:0;font-size:13px;line-height:1;border-radius:50%;background:var(--bg)}
-#panel{border-bottom:1px solid var(--ink);padding:10px 12px;max-height:46vh;overflow-y:auto;font-size:14px}
+#panel{flex:none;border-bottom:1px solid var(--ink);padding:10px 12px;max-height:46vh;overflow-y:auto;font-size:14px}
 #panel[hidden]{display:none}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
 .sl{display:grid;grid-template-columns:5.5em 1fr 4em;gap:8px;align-items:center;margin:4px 0}
@@ -40,7 +40,7 @@ summary{cursor:pointer;padding:4px 0}
 
 .sw{width:34px;height:34px;min-height:0;padding:0}
 label.chk{display:flex;gap:6px;align-items:center}
-#ed{zoom:var(--z);flex:1;overflow-y:auto;box-sizing:border-box;width:100%;max-width:var(--pw);margin:0 auto;padding:24px 18px 55vh;outline:none;font-family:var(--font);font-size:var(--fs);line-height:var(--lh);letter-spacing:var(--ls);word-break:var(--wb);overflow-wrap:break-word;caret-color:var(--ink)}
+#ed{flex:1 1 0;min-height:0;overflow-y:auto;box-sizing:border-box;width:100%;max-width:var(--pw);margin:0 auto;padding:24px 18px 55vh;outline:none;font-family:var(--font);font-size:var(--fs);line-height:var(--lh);letter-spacing:var(--ls);word-break:var(--wb);overflow-wrap:break-word;caret-color:var(--ink)}
 #ed div{margin:0 0 var(--ps);text-indent:var(--ind);min-height:1em}
 ::selection{background:var(--ink);color:var(--bg)}
 </style>
@@ -98,8 +98,8 @@ let S={...DEF};
 try{const t=JSON.parse(localStorage.getItem('ink-s')||'null');if(t){if(!t.u&&t.fs)t.fs=Math.round(t.fs*1.5)/2;Object.assign(S,t)}else if(matchMedia('(prefers-color-scheme: dark)').matches){S.bg=PRE[2][0];S.ink=PRE[2][1]}}catch(e){}
 const saveS=()=>{S.u=1;try{localStorage.setItem('ink-s',JSON.stringify(S))}catch(e){}};
 function apply(sk){
-  root.setProperty('--bg',S.bg);root.setProperty('--ink',S.ink);root.setProperty('--fs',S.fs+'pt');root.setProperty('--lh',S.lh);
-  root.setProperty('--ls',S.ls+'px');root.setProperty('--ps',S.ps+'em');root.setProperty('--ind',S.ind+'em');root.setProperty('--pw',S.pw?S.pw+'cm':'44em');root.setProperty('--z',S.zoom||1);root.setProperty('--font',S.font);
+  root.setProperty('--bg',S.bg);root.setProperty('--ink',S.ink);root.setProperty('--fs',(S.fs*(S.zoom||1)).toFixed(2)+'pt');root.setProperty('--lh',S.lh);
+  root.setProperty('--ls',(S.ls*(S.zoom||1)).toFixed(2)+'px');root.setProperty('--ps',S.ps+'em');root.setProperty('--ind',S.ind+'em');root.setProperty('--pw',S.pw?(S.pw*(S.zoom||1)).toFixed(2)+'cm':'44em');root.setProperty('--font',S.font);
   root.setProperty('--wb',S.kw?'keep-all':'normal');$('#kw').checked=S.kw;
   $('#tw').checked=S.tw;$('#spc').checked=S.spc;if(lastF!==S.font){lastF=S.font;renderFonts()}if(!sk)syncColor();
   R.forEach(([k])=>{const i=$('#sl_'+k);if(i){i.value=S[k];i.nextElementSibling.textContent=(k=='pw'&&!S.pw)?'자동':S[k]+R.find(r=>r[0]==k)[5]}});
